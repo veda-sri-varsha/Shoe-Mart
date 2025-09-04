@@ -7,24 +7,17 @@ import { signupSchema, loginSchema } from "../schema/auth.zod";
 import mailHelper from "../utils/mailHelper";
 import handler from "../services/handler";
 import CustomError from "../services/customError";
-<<<<<<< HEAD
-=======
-import { generateOtp } from "../utils/otpHelper";
->>>>>>> 6e53c6292180d3478127d3733465dc4d2be3c437
 
 export const cookieOptions = {
   expires: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000),
   httpOnly: true,
 };
-<<<<<<< HEAD
 
 const generateOtp = (expiryMinutes: number = 10) => {
-  const otp = Math.floor(100000 + Math.random() * 900000).toString();
+  const otp = Math.floor(100000 + Math.random() * 900000).toString(); 
   const expireAt = new Date(Date.now() + expiryMinutes * 60 * 1000);
   return { otp, expireAt };
 };
-=======
->>>>>>> 6e53c6292180d3478127d3733465dc4d2be3c437
 
 export const signup = handler(async (req: Request, res: Response) => {
   const validate = signupSchema.safeParse(req.body);
