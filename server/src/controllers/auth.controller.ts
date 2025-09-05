@@ -37,8 +37,6 @@ export const signup = handler(async (req: Request, res: Response) => {
     password: hashedPassword,
     role: role || AuthRoles.USER,
     isVerified: false,
-    verifyOtp: otp,
-    verifyOtpExpireAt: expireAt,
   });
 
   await mailHelper({
@@ -93,7 +91,6 @@ export const verifyEmail = handler(async (req: Request, res: Response) => {
       success: false, 
       statusCode: 400,
       message: "OTP expired. New OTP sent to your email.",
-      data: null
     });
   }
 
@@ -164,10 +161,7 @@ export const login = handler(async (req: Request, res: Response) => {
         email: user.email,
         role: user.role,
         isVerified: user.isVerified,
-      },
-      tokens: {
-        accessToken,
-        refreshToken
+        refreshToken: refreshToken
       }
     }
   });
@@ -190,7 +184,6 @@ export const logout = handler(async (req: Request, res: Response) => {
     success: true,
     statusCode: 200,
     message: "Logout successful",
-    data: null
   });
 });
 
@@ -216,7 +209,6 @@ export const forgotPassword = handler(async (req: Request, res: Response) => {
     success: true, 
     statusCode: 200, 
     message: "Password reset OTP sent to your email.",
-    data: null
   });
 });
 
@@ -251,7 +243,6 @@ export const resetPassword = handler(async (req: Request, res: Response) => {
     success: true, 
     statusCode: 200,
     message: "Password reset successfully",
-    data: null
   });
 });
 
