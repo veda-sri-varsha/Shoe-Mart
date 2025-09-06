@@ -1,6 +1,7 @@
 import { z } from "zod";
 import AuthRoles from "../constants/authRoles";
 import rateLimit from "express-rate-limit";
+import CustomError from "../services/customError";
 
 export const signupSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters long"),
@@ -17,18 +18,27 @@ export const loginSchema = z.object({
 });
 
 export const signupLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 5,
-  message: { message: "Too many signup attempts. Please try again later." },
+  windowMs: 15 * 60 * 1000, 
+  max: 5, 
+  handler: (_req, _res, next) => {
+    next(new CustomError(
+      "Too many signup attempts. Please try again later.",
+      429
+    ));
+  },
   standardHeaders: true,
   legacyHeaders: false,
 });
 
 export const loginLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 10,
-  message: { message: "Too many login attempts. Please try again later." },
+  windowMs: 15 * 60 * 1000, 
+  max: 10, 
+  handler: (_req, _res, next) => {
+    next(new CustomError(
+      "Too many login attempts. Please try again later.",
+      429
+    ));
+  },
   standardHeaders: true,
   legacyHeaders: false,
 });
-
