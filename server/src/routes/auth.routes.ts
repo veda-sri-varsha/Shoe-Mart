@@ -7,7 +7,9 @@ import {
   getProfile,
   getAllUsers,
   forgotPassword,
-  resetPassword
+  resetPassword,
+  updatePassword,
+  refreshToken
 } from "../controllers/auth.controller";
 import { signupLimiter, loginLimiter } from "../schema/auth.zod";
 import UserAuth, { authorize } from "../middlewares/UserAuth";
@@ -20,6 +22,8 @@ router.post("/login", loginLimiter, login);
 router.post("/verify-email", verifyEmail);
 router.post("/forgot-password", forgotPassword);
 router.post("/reset-password", resetPassword);
+router.post("/update-password", UserAuth, updatePassword);
+router.post("/refresh-token", refreshToken);
 router.post("/logout", logout);
 
 router.get("/profile", getProfile);
