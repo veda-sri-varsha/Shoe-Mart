@@ -7,6 +7,8 @@ import { signupSchema, loginSchema } from "../schema/auth.zod";
 import mailHelper from "../utils/mailHelper";
 import handler from "../services/handler";
 import CustomError from "../services/customError";
+import jwt from "jsonwebtoken";
+import config from "../config";
 
 export const cookieOptions = {
   expires: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000),
@@ -28,15 +30,16 @@ export const signup = handler(async (req: Request, res: Response) => {
   const existingUser = await User.findOne({ email: email.toLowerCase() });
   if (existingUser) throw new CustomError("User already exists", 400);
 
-  const hashedPassword = await bcrypt.hash(password, 10);
   const { otp, expireAt } = generateOtp(10);
 
   const newUser = await User.create({
     name,
     email: email.toLowerCase(),
-    password: hashedPassword,
+    password,
     role: role || AuthRoles.USER,
     isVerified: false,
+    verifyOtp: otp,
+    verifyOtpExpireAt: expireAt,
   });
 
   await mailHelper({
@@ -130,11 +133,11 @@ export const login = handler(async (req: Request, res: Response) => {
     throw new CustomError("Please verify your email before logging in", 403);
   }
 
-  const isPasswordValid = await bcrypt.compare(password, user.password);
+const isPasswordValid = await user.comparePassword(password);
   if (!isPasswordValid) throw new CustomError("Invalid credentials", 400);
 
   const accessToken = user.generateAccessToken();
-  const refreshToken = user.generateRefreshToken();
+  const refreshToken = await user.generateRefreshToken();
 
   user.refreshToken = refreshToken;
   await user.save({ validateBeforeSave: false });
@@ -145,7 +148,6 @@ export const login = handler(async (req: Request, res: Response) => {
 
   res.cookie("refreshToken", refreshToken, {
     httpOnly: true,
-    maxAge: 7 * 24 * 60 * 60 * 1000,
   });
 
   res.clearCookie("token");
@@ -167,6 +169,40 @@ export const login = handler(async (req: Request, res: Response) => {
   });
 });
 
+
+export const refreshToken = handler(async (req: Request, res: Response) => {
+  const incomingRefreshToken = (req.cookies && req.cookies.refreshToken) || req.body.refreshToken;
+  if (!incomingRefreshToken) throw new CustomError("Refresh token required", 401);
+
+  let decoded: any;
+  try {
+    decoded = jwt.verify(incomingRefreshToken, config.JWT_REFRESH_SECRET || "");
+  } catch (err: any) {
+    throw new CustomError("Invalid or expired refresh token", 401, err?.message);
+  }
+
+  const user = await User.findById(decoded.id).select("+refreshToken");
+  if (!user) throw new CustomError("User not found", 401);
+
+  if (user.refreshToken !== incomingRefreshToken) {
+    throw new CustomError("Refresh token is invalid or has been rotated", 401);
+  }
+
+  const newAccessToken = user.generateAccessToken();
+  const newRefreshToken = await user.generateRefreshToken();
+
+  res.cookie("accessToken", newAccessToken, cookieOptions);
+  res.cookie("refreshToken", newRefreshToken, cookieOptions);
+
+  return res.status(200).json({
+    success: true,
+    statusCode: 200,
+    message: "Access token refreshed successfully",
+    data: { accessToken: newAccessToken },
+  });
+});
+
+
 export const logout = handler(async (req: Request, res: Response) => {
   const { email } = req.body;
   if (!email) throw new CustomError("Email is required", 400);
@@ -184,6 +220,7 @@ export const logout = handler(async (req: Request, res: Response) => {
     success: true,
     statusCode: 200,
     message: "Logout successful",
+    data: {},
   });
 });
 
@@ -234,7 +271,7 @@ export const resetPassword = handler(async (req: Request, res: Response) => {
     throw new CustomError("OTP expired", 400);
   }
 
-  user.password = await bcrypt.hash(newPassword, 10);
+  user.password = newPassword;
   user.resetOtp = undefined;
   user.resetOtpExpireAt = undefined;
   await user.save();
@@ -265,14 +302,13 @@ export const updatePassword = handler(async (req: Request, res: Response) => {
     throw new CustomError("Old password is incorrect", 400);
   }
 
-  user.password = await bcrypt.hash(newPassword, 10);
+  user.password = newPassword;
   await user.save();
 
   res.status(200).json({ 
     success: true, 
     statusCode: 200,
     message: "Password updated successfully",
-    data: null
   });
 });
 
