@@ -9,11 +9,13 @@ const collectionSchema: Schema<Collection> = new mongoose.Schema(
       trim: true,
       maxlength: [120, "Name should not be more than 120 characters"],
     },
-    images: [
-      {
-        url: { type: String, required: true },
-      },
-    ],
+   images: [
+  {
+    url: { type: String, required: true },
+    public_id: { type: String, required: true }, 
+  },
+],
+
     isActive: {
       type: Boolean,
       default: true,
