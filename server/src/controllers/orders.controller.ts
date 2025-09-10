@@ -4,6 +4,7 @@ import Order from "../models/order.schema";
 import Razorpay from "razorpay";
 import { AuthRequest } from "../middlewares/UserAuth";
 import config from "../config";
+import CustomError from "../services/customError";
 
 const razorpay = new Razorpay({
   key_id: config.RAZORPAY_KEY,
@@ -13,19 +14,25 @@ const razorpay = new Razorpay({
 export const generateRazorPayOrderId = handler(
   async (req: AuthRequest, res: Response) => {
     const { amount, currency } = req.body;
-    if (!amount)
-      return res
-        .status(400)
-        .json({ success: false, message: "Amount is required" });
+
+    if (!amount) {
+      throw new CustomError("Amount is required", 400);
+    }
 
     const order = await razorpay.orders.create({
       amount: amount * 100,
       currency: currency || "INR",
     });
 
-    res
-      .status(200)
-      .json({ success: true, orderId: order.id, amount: order.amount });
+    res.status(200).json({
+      success: true,
+      message: "Razorpay order created successfully",
+      data: {
+        orderId: order.id,
+        amount: order.amount,
+        currency: order.currency,
+      },
+    });
   }
 );
 
@@ -35,9 +42,7 @@ export const generateOrder = handler(
       req.body;
 
     if (!products || !products.length || !totalAmount) {
-      return res
-        .status(400)
-        .json({ success: false, message: "All fields are required" });
+      throw new CustomError("All fields are required", 400);
     }
 
     const order = await Order.create({
@@ -49,7 +54,11 @@ export const generateOrder = handler(
       paymentId,
     });
 
-    res.status(201).json({ success: true, message: "Order created", order });
+    res.status(201).json({
+      success: true,
+      message: "Order created successfully",
+      data: order,
+    });
   }
 );
 
@@ -57,14 +66,24 @@ export const getOrders = handler(async (req: AuthRequest, res: Response) => {
   const orders = await Order.find({ user: req.user?._id }).populate(
     "products.product"
   );
-  res.status(200).json({ success: true, orders });
+
+  res.status(200).json({
+    success: true,
+    message: "User orders fetched successfully",
+    data: orders,
+  });
 });
 
 export const getOrderAdmin = handler(async (_req: Request, res: Response) => {
   const orders = await Order.find()
     .populate("user")
     .populate("products.product");
-  res.status(200).json({ success: true, orders });
+
+  res.status(200).json({
+    success: true,
+    message: "All orders fetched successfully",
+    data: orders,
+  });
 });
 
 export const updateOrderStatus = handler(
@@ -73,25 +92,30 @@ export const updateOrderStatus = handler(
     const { status } = req.body;
 
     const order = await Order.findByIdAndUpdate(id, { status }, { new: true });
-    if (!order)
-      return res
-        .status(404)
-        .json({ success: false, message: "Order not found" });
 
-    res
-      .status(200)
-      .json({ success: true, message: "Order status updated", order });
+    if (!order) {
+      throw new CustomError("Order not found", 404);
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Order status updated successfully",
+      data: order,
+    });
   }
 );
 
 export const deleteOrder = handler(async (req: Request, res: Response) => {
   const { id } = req.params;
+
   const order = await Order.findByIdAndDelete(id);
 
-  if (!order)
-    return res.status(404).json({ success: false, message: "Order not found" });
+  if (!order) {
+    throw new CustomError("Order not found", 404);
+  }
 
-  res
-    .status(200)
-    .json({ success: true, message: "Order deleted successfully" });
+  res.status(200).json({
+    success: true,
+    message: "Order deleted successfully",
+  });
 });

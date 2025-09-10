@@ -9,10 +9,12 @@ import {
 } from "../controllers/product.controller";
 import UserAuth, { authorize } from "../middlewares/UserAuth";
 import AuthRoles from "../constants/authRoles";
+import { upload } from "../middlewares/upload.middleware";
+
 
 const router: Router = Router();
 
-router.post("/", UserAuth, authorize(AuthRoles.ADMIN, AuthRoles.VENDOR), addProduct);
+router.post("/", UserAuth,upload.single("image"), authorize(AuthRoles.ADMIN, AuthRoles.VENDOR), addProduct);
 router.put(
   "/:id",
   UserAuth,

@@ -14,5 +14,9 @@ export const envSchema = z.object({
   SMTP_PORT: z.string(),
   SMTP_USERNAME: z.string(),
   SMTP_PASSWORD: z.string(),
-  SMTP_FROM_EMAIL: z.string().email(),
+  SMTP_FROM_EMAIL: z.email(),
+  CLOUDINARY_CLOUD_NAME: z.string(),
+  CLOUDINARY_API_KEY: z.string(),
+  CLOUDINARY_API_SECRET: z.string(),
+  CLIENT_URL: z.string(),
 });
