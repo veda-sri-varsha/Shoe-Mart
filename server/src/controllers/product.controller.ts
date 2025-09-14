@@ -5,7 +5,6 @@ import Collection from "../models/collection.schema";
 import { productSchema } from "../schema/product.zod";
 import handler from "../services/handler";
 import CustomError from "../services/customError";
-<<<<<<< HEAD
 import { uploadToCloudinary } from "../config/cloudinary";
 
 
@@ -17,17 +16,6 @@ export const addProduct = handler(async (req: Request, res: Response) => {
     ratings: req.body.ratings ? Number(req.body.ratings) : 0,
     sold: req.body.sold ? Number(req.body.sold) : 0,
   };
-=======
-
-export const addProduct = handler(async (req: Request, res: Response) => {
-  const validate = productSchema.safeParse(req.body);
-  if (!validate.success) {
-    throw new CustomError("Invalid product input", 400, validate.error.issues);
-  }
-
-  const { name, price, brand, description, category, stock, collectionId } = validate.data;
-
->>>>>>> 119a0f2facd3a85e0e1480b1421ea7b96fb32c14
 
   let uploadedImages: { url: string; public_id: string }[] = [];
   if (req.file) {
@@ -39,7 +27,6 @@ export const addProduct = handler(async (req: Request, res: Response) => {
     body.images = uploadedImages;
   }
 
-<<<<<<< HEAD
   const validate = productSchema.safeParse(body);
   if (!validate.success) {
     throw new CustomError("Invalid product input", 400, validate.error.issues);
@@ -53,17 +40,10 @@ export const addProduct = handler(async (req: Request, res: Response) => {
     });
   }
 
-=======
-  if (collectionId) {
-    await Collection.findByIdAndUpdate(collectionId, { $inc: { productCount: 1 } });
-  }
-
->>>>>>> 119a0f2facd3a85e0e1480b1421ea7b96fb32c14
   return res.status(201).json({
     success: true,
     statusCode: 201,
     message: "Product created successfully",
-<<<<<<< HEAD
     data: product,
   });
 });
@@ -129,22 +109,6 @@ export const addProduct = handler(async (req: Request, res: Response) => {
 //   });
 // });
 
-=======
-    data: {
-      id: product._id,
-      name: product.name,
-      brand: product.brand,
-      price: product.price,
-      description: product.description,
-      category: product.category,
-      stock: product.stock,
-      collectionId: product.collectionId,
-      images: product.images,
-    },
-  });
-});
-
->>>>>>> 119a0f2facd3a85e0e1480b1421ea7b96fb32c14
 export const getAllProducts = handler(async (req: Request, res: Response) => {
   const { page = 1, limit = 10 } = req.query;
 
@@ -195,7 +159,6 @@ export const updateProduct = handler(async (req: Request, res: Response) => {
     throw new CustomError("Invalid Product ID", 400);
   }
 
-<<<<<<< HEAD
    const body: any = {
     ...req.body,
     price: req.body.price ? Number(req.body.price) : undefined,
@@ -215,9 +178,6 @@ export const updateProduct = handler(async (req: Request, res: Response) => {
   }
 
   const updatedProduct = await Product.findByIdAndUpdate(id, body, {
-=======
-  const updatedProduct = await Product.findByIdAndUpdate(id, req.body, {
->>>>>>> 119a0f2facd3a85e0e1480b1421ea7b96fb32c14
     new: true,
     runValidators: true,
   });
