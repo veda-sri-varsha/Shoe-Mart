@@ -9,8 +9,7 @@ export const productSchema = z.object({
   stock: z.number().min(0).default(0),
   collectionId: z.string().length(24),
   images: z
-    .array(z.object({ url: z.string(), public_id: z.string() }))
-    .optional(),
+    .array(z.object({ url: z.string(), public_id: z.string() })),
   ratings: z.number().min(0).max(5).default(0),
   sold: z.number().min(0).default(0),
 });

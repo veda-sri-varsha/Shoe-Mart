@@ -6,7 +6,7 @@ export type Product = Document & {
   brand: string;
   description?: string;
   ratings: number;
-  images: { url: string }[];
+  images: { url: string,public_id:string }[];
   category: string;
   stock: number;
   sold: number;
