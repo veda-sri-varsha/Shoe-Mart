@@ -26,7 +26,7 @@ export const uploadToCloudinary = async (
     throw error;
   } finally {
     if (fs.existsSync(filePath)) {
-      // fs.unlinkSync(filePath);
+      fs.unlinkSync(filePath);
       console.log(`Temporary file ${filePath}.`);
     }
   }

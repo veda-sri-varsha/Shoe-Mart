@@ -2,14 +2,13 @@ import { Request, Response } from "express";
 import Coupon from "../models/coupon.schema";
 import { AuthRequest } from "../middlewares/UserAuth";
 import handler from "../services/handler";
+import CustomError from "../services/customError";
 
 export const createCoupon = handler(async (req: Request, res: Response) => {
   const { code, discount, expiry } = req.body;
 
   if (!code || !discount || !expiry) {
-    return res
-      .status(400)
-      .json({ success: false, message: "Please fill all fields" });
+    throw new CustomError("Please fill all fields", 400);
   }
 
   const coupon = await Coupon.create({ code, discount, expiry });
@@ -17,19 +16,21 @@ export const createCoupon = handler(async (req: Request, res: Response) => {
   res.status(201).json({
     success: true,
     message: "Coupon created successfully",
-    coupon,
+    data: coupon,
   });
 });
 
 export const getCoupons = handler(async (_req: Request, res: Response) => {
   const coupons = await Coupon.find();
   if (!coupons.length) {
-    return res
-      .status(404)
-      .json({ success: false, message: "No coupons found" });
+    throw new CustomError("No coupons found", 404);
   }
 
-  res.status(200).json({ success: true, coupons });
+  res.status(200).json({
+    success: true,
+    message: "Coupons fetched successfully",
+    data: coupons,
+  });
 });
 
 export const updateCoupon = handler(async (req: Request, res: Response) => {
@@ -37,9 +38,7 @@ export const updateCoupon = handler(async (req: Request, res: Response) => {
   const { code, discount, expiry } = req.body;
 
   if (!code || !discount || !expiry) {
-    return res
-      .status(400)
-      .json({ success: false, message: "Please fill all fields" });
+    throw new CustomError("Please fill all fields", 400);
   }
 
   const coupon = await Coupon.findByIdAndUpdate(
@@ -49,15 +48,13 @@ export const updateCoupon = handler(async (req: Request, res: Response) => {
   );
 
   if (!coupon) {
-    return res
-      .status(404)
-      .json({ success: false, message: "Coupon not found" });
+    throw new CustomError("Coupon not found", 404);
   }
 
   res.status(200).json({
     success: true,
     message: "Coupon updated successfully",
-    coupon,
+    data: coupon,
   });
 });
 
@@ -67,9 +64,7 @@ export const deleteCoupon = handler(async (req: Request, res: Response) => {
   const coupon = await Coupon.findByIdAndDelete(id);
 
   if (!coupon) {
-    return res
-      .status(404)
-      .json({ success: false, message: "Coupon not found" });
+    throw new CustomError("Coupon not found", 404);
   }
 
   res.status(200).json({
@@ -82,23 +77,17 @@ export const activeCoupon = handler(async (req: AuthRequest, res: Response) => {
   const { code } = req.body;
 
   if (!code) {
-    return res
-      .status(400)
-      .json({ success: false, message: "Please provide code" });
+    throw new CustomError("Please provide coupon code", 400);
   }
 
   if (!req.user) {
-    return res
-      .status(401)
-      .json({ success: false, message: "Please login to apply coupon" });
+    throw new CustomError("Please login to apply coupon", 401);
   }
 
   const coupon = await Coupon.findOne({ code });
 
   if (!coupon) {
-    return res
-      .status(404)
-      .json({ success: false, message: "Coupon not found" });
+    throw new CustomError("Coupon not found", 404);
   }
 
   const currentDate = new Date();
@@ -109,6 +98,6 @@ export const activeCoupon = handler(async (req: AuthRequest, res: Response) => {
   res.status(200).json({
     success: true,
     message: isActive ? "Coupon is active" : "Coupon has expired",
-    active: isActive,
+    data: { active: isActive, coupon },
   });
 });
