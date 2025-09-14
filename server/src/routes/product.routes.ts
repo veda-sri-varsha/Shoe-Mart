@@ -14,11 +14,7 @@ import { upload } from "../middlewares/upload.middleware";
 
 const router: Router = Router();
 
-<<<<<<< HEAD
 router.post("/", UserAuth, authorize(AuthRoles.ADMIN, AuthRoles.VENDOR),upload.single("image") ,addProduct);
-=======
-router.post("/", UserAuth,upload.single("image"), authorize(AuthRoles.ADMIN, AuthRoles.VENDOR), addProduct);
->>>>>>> 119a0f2facd3a85e0e1480b1421ea7b96fb32c14
 router.put(
   "/:id",
   UserAuth,
